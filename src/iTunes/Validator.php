@@ -170,10 +170,17 @@ class Validator
       $this->setSharedSecret($sharedSecret);
     }
 
-    $httpResponse = $this->getClient()->request('POST', null, ['body' => $this->encodeRequest()]);
+    if ($this->_endpoint == self::ENDPOINT_PRODUCTION) {
+      $httpResponse = $this->getClient()->request('POST', null, ['body' => $this->encodeRequest()]);
+    }
+    else {
+      $httpResponse = $this->getClient()->request('POST', null, ['body' => $this->encodeRequest(),
+        'connect_timeout' => 60
+      ]);
+    }
 
     if ($httpResponse->getStatusCode() != 200) {
-      throw new RunTimeException('Unable to get response from itunes server');
+      throw new RunTimeException('Unable to get response from itunes server (' . $httpResponse->getStatusCode() . ')');
     }
 
     $response = new Response(json_decode($httpResponse->getBody(), true));
